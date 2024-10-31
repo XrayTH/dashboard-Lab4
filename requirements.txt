@@ -1,0 +1,6 @@
+tk
+pandas
+matplotlib
+seaborn
+pymysql
+python-dotenv
