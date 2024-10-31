@@ -93,7 +93,7 @@ class Dashboard:
             total_beneficiarios = total_por_año['CantidadDeBeneficiarios'].sum()
 
             # Crear el gráfico circular
-            fig, ax = plt.subplots(figsize=(8, 8))
+            fig, ax = plt.subplots(figsize=(10, 10))
 
             # Función para formatear las etiquetas con el número y el porcentaje
             def label_format(pct, all_values):
@@ -127,12 +127,16 @@ class Dashboard:
     def distribucion_por_departamento(self):
         try:
             distribucion = self.data.groupby('NombreDepartamentoAtencion')['CantidadDeBeneficiarios'].sum().reset_index()
-            fig, ax = plt.subplots(figsize=(10, 6))
+            fig, ax = plt.subplots(figsize=(12, 6))  # Aumentar el tamaño de la figura
             sns.barplot(data=distribucion, x='NombreDepartamentoAtencion', y='CantidadDeBeneficiarios', ax=ax, palette='Blues_d')
             ax.set_title("Distribución de beneficiarios por departamento", fontsize=14)
             ax.set_xlabel("Departamento", fontsize=12)
             ax.set_ylabel("Cantidad de Beneficiarios", fontsize=12)
-            plt.xticks(rotation=45)
+
+            # Ajustar las etiquetas del eje X
+            plt.xticks(rotation=45, ha='right', fontsize=10)
+            plt.tight_layout()  # Ajustar el diseño
+
             self.mostrar_grafico(fig)
         except Exception as e:
             self.mostrar_mensaje(f"Error al generar gráfico de distribución por departamento: {e}")
@@ -140,12 +144,16 @@ class Dashboard:
     def tipos_incentivos_recibidos(self):
         try:
             incentivos = self.data.groupby(['TipoBeneficio', 'TipoAsignacionBeneficio'])['CantidadDeBeneficiarios'].sum().reset_index()
-            fig, ax = plt.subplots(figsize=(10, 6))
+            fig, ax = plt.subplots(figsize=(12, 6))  # Aumentar el tamaño de la figura
             sns.barplot(data=incentivos, x='TipoBeneficio', y='CantidadDeBeneficiarios', hue='TipoAsignacionBeneficio', ax=ax, palette='Set2')
             ax.set_title("Tipos de incentivos recibidos", fontsize=14)
             ax.set_xlabel("Tipo de Beneficio", fontsize=12)
             ax.set_ylabel("Cantidad de Beneficiarios", fontsize=12)
-            plt.xticks(rotation=45)
+
+            # Ajustar las etiquetas del eje X
+            plt.xticks(rotation=45, ha='right', fontsize=10)
+            plt.tight_layout()  # Ajustar el diseño
+
             self.mostrar_grafico(fig)
         except Exception as e:
             self.mostrar_mensaje(f"Error al generar gráfico de tipos de incentivos: {e}")
@@ -153,11 +161,13 @@ class Dashboard:
     def variacion_beneficiarios_tiempo(self):
         try:
             variacion = self.data.resample('Q', on='FechaInscripcionBeneficiario')['CantidadDeBeneficiarios'].sum().reset_index()
-            fig, ax = plt.subplots(figsize=(10, 6))
+            fig, ax = plt.subplots(figsize=(12, 6))  # Aumentar el tamaño de la figura
             sns.lineplot(data=variacion, x='FechaInscripcionBeneficiario', y='CantidadDeBeneficiarios', ax=ax, marker='o', color='coral')
             ax.set_title("Variación de beneficiarios en el tiempo", fontsize=14)
             ax.set_xlabel("Fecha", fontsize=12)
             ax.set_ylabel("Cantidad de Beneficiarios", fontsize=12)
+            plt.tight_layout()  # Ajustar el diseño
+
             self.mostrar_grafico(fig)
         except Exception as e:
             self.mostrar_mensaje(f"Error al generar gráfico de variación en el tiempo: {e}")
@@ -165,12 +175,16 @@ class Dashboard:
     def relacion_incentivo_educacion(self):
         try:
             relacion = self.data.groupby(['TipoBeneficio', 'NivelEscolaridad'])['CantidadDeBeneficiarios'].sum().reset_index()
-            fig, ax = plt.subplots(figsize=(10, 6))
+            fig, ax = plt.subplots(figsize=(12, 6))  # Aumentar el tamaño de la figura
             sns.barplot(data=relacion, x='TipoBeneficio', y='CantidadDeBeneficiarios', hue='NivelEscolaridad', ax=ax, palette='Pastel1')
             ax.set_title("Relación entre tipo de incentivo y nivel educativo", fontsize=14)
             ax.set_xlabel("Tipo de Beneficio", fontsize=12)
             ax.set_ylabel("Cantidad de Beneficiarios", fontsize=12)
-            plt.xticks(rotation=45)
+
+            # Ajustar las etiquetas del eje X
+            plt.xticks(rotation=45, ha='right', fontsize=10)
+            plt.tight_layout()  # Ajustar el diseño
+
             self.mostrar_grafico(fig)
         except Exception as e:
             self.mostrar_mensaje(f"Error al generar gráfico de relación incentivo y educación: {e}")
