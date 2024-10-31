@@ -1,0 +1,68 @@
+# Python general
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Archivos de entorno virtual
+ejemplo/
+venv/
+.env
+.venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# Archivos de configuración de entorno
+.env
+*.env
+*.local
+
+# Configuración de IDEs y editores de código
+# Visual Studio Code
+.vscode/
+# PyCharm
+.idea/
+# Otros editores
+*.swp
+*~
+
+# Dependencias
+pip-log.txt
+pip-delete-this-directory.txt
+Pipfile.lock
+
+# Archivos de registro y caché
+*.log
+*.cache
+*.coverage
+*.coverage.*
+.cache/
+.tox/
+.coverage
+.coverage.*
+.hypothesis/
+
+# Compilación de Cython
+*.c
+*.so
+
+# Documentación
+build/
+docs/_build/
+!docs/*.md
+
+# Archivos específicos de paquetes
+.eggs/
+*.egg-info/
+dist/
+*.egg
+
+# Archivos de prueba
+.pytest_cache/
+htmlcov/
+test-output/
+
+# Otros
+.DS_Store
+Thumbs.db
