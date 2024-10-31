@@ -10,7 +10,7 @@ from controlador import obtener_todos_beneficiarios
 class Dashboard:
     def __init__(self, root):
         self.root = root
-        self.root.title("Dashboard de Beneficiarios")
+        self.root.title("Distribución de Beneficiarios por Año")
         self.root.geometry("1200x800")
         self.root.configure(bg='#f2f2f2')
 
@@ -18,16 +18,29 @@ class Dashboard:
         self.button_frame = ttk.Frame(self.root, padding=10)
         self.button_frame.grid(row=0, column=0, sticky="ew")
 
-        # Crear botones para las diferentes consultas
-        ttk.Button(self.button_frame, text="Número total de beneficiarios", command=self.total_beneficiarios).grid(row=0, column=0, padx=5)
-        ttk.Button(self.button_frame, text="Distribución por departamento", command=self.distribucion_por_departamento).grid(row=0, column=1, padx=5)
-        ttk.Button(self.button_frame, text="Tipos de incentivos recibidos", command=self.tipos_incentivos_recibidos).grid(row=0, column=2, padx=5)
-        ttk.Button(self.button_frame, text="Variación de beneficiarios en el tiempo", command=self.variacion_beneficiarios_tiempo).grid(row=0, column=3, padx=5)
-        ttk.Button(self.button_frame, text="Relación entre tipo de incentivo y nivel educativo", command=self.relacion_incentivo_educacion).grid(row=0, column=4, padx=5)
+        # Crear un diccionario para los botones y sus comandos
+        button_commands = {
+            "Número total de beneficiarios": self.total_beneficiarios,
+            "Distribución por departamento": self.distribucion_por_departamento,
+            "Tipos de incentivos recibidos": self.tipos_incentivos_recibidos,
+            "Variación de beneficiarios en el tiempo": self.variacion_beneficiarios_tiempo,
+            "Relación entre tipo de incentivo y nivel educativo": self.relacion_incentivo_educacion
+        }
+
+        # Crear botones utilizando el diccionario
+        for i, (text, command) in enumerate(button_commands.items()):
+            button = ttk.Button(self.button_frame, text=text, command=command)
+            button.grid(row=0, column=i, padx=10, pady=5, sticky="ew")
+            button.config(width=30, style="TButton")
+
+        # Estilo de botones
+        style = ttk.Style()
+        style.configure("TButton", padding=10, font=('Arial', 10))
+        style.map("TButton", background=[('active', '#4CAF50')])  # Color al hacer hover
 
         # Crear un Frame para los gráficos
-        self.canvas_graficos = tk.Frame(self.root)
-        self.canvas_graficos.grid(row=1, column=0, sticky="nsew")
+        self.canvas_graficos = tk.Frame(self.root, bg='#f2f2f2')
+        self.canvas_graficos.grid(row=1, column=0, sticky="nsew", padx=10, pady=10)
 
         # Asegurar que el Frame de gráficos se expanda
         self.root.grid_rowconfigure(1, weight=1)
@@ -42,7 +55,6 @@ class Dashboard:
 
     def cargar_datos(self):
         try:
-            # Obtener datos desde la función de controlador
             beneficiarios = obtener_todos_beneficiarios()
             columnas = [
                 'id', 'CodigoDepartamentoAtencion', 'EstadoBeneficiario',
@@ -73,11 +85,42 @@ class Dashboard:
 
     def total_beneficiarios(self):
         try:
-            periodo_inicio = datetime(2012, 1, 1)
-            periodo_fin = datetime(2015, 12, 31)
-            total = self.data[(self.data['FechaInscripcionBeneficiario'] >= periodo_inicio) & 
-                              (self.data['FechaInscripcionBeneficiario'] <= periodo_fin)]['CantidadDeBeneficiarios'].sum()
-            self.mostrar_mensaje(f"Total de beneficiarios entre {periodo_inicio.date()} y {periodo_fin.date()}: {total}")
+            # Agrupar los datos por año y contar la cantidad de beneficiarios
+            self.data['Año'] = self.data['FechaInscripcionBeneficiario'].dt.year
+            total_por_año = self.data.groupby('Año')['CantidadDeBeneficiarios'].sum().reset_index()
+
+            # Calcular el total de beneficiarios
+            total_beneficiarios = total_por_año['CantidadDeBeneficiarios'].sum()
+
+            # Crear el gráfico circular
+            fig, ax = plt.subplots(figsize=(8, 8))
+
+            # Función para formatear las etiquetas con el número y el porcentaje
+            def label_format(pct, all_values):
+                total = sum(all_values)
+                absolute = int(pct / 100. * total)
+                return f'{absolute} ({pct:.1f}%)'
+
+            # Crear el gráfico circular
+            wedges, texts, autotexts = ax.pie(total_por_año['CantidadDeBeneficiarios'], 
+                                            labels=total_por_año['Año'], 
+                                            autopct=lambda pct: label_format(pct, total_por_año['CantidadDeBeneficiarios']),
+                                            startangle=90,
+                                            colors=sns.color_palette("Blues_d", len(total_por_año)))
+
+            ax.set_title("Distribución de Beneficiarios por Año", fontsize=14)
+            ax.axis('equal')  # Para que el gráfico sea un círculo
+
+            # Formato para el texto dentro del gráfico
+            for text in autotexts:
+                text.set_color('white')
+                text.set_fontsize(10)
+
+            # Añadir el total de beneficiarios como texto en el gráfico
+            ax.text(0, 0, f'Total: {total_beneficiarios}', ha='center', va='center', fontsize=16, weight='bold')
+
+            # Mostrar el gráfico
+            self.mostrar_grafico(fig)
         except Exception as e:
             self.mostrar_mensaje(f"Error en consulta de beneficiarios: {e}")
 
@@ -86,9 +129,9 @@ class Dashboard:
             distribucion = self.data.groupby('NombreDepartamentoAtencion')['CantidadDeBeneficiarios'].sum().reset_index()
             fig, ax = plt.subplots(figsize=(10, 6))
             sns.barplot(data=distribucion, x='NombreDepartamentoAtencion', y='CantidadDeBeneficiarios', ax=ax, palette='Blues_d')
-            ax.set_title("Distribución de beneficiarios por departamento")
-            ax.set_xlabel("Departamento")
-            ax.set_ylabel("Cantidad de Beneficiarios")
+            ax.set_title("Distribución de beneficiarios por departamento", fontsize=14)
+            ax.set_xlabel("Departamento", fontsize=12)
+            ax.set_ylabel("Cantidad de Beneficiarios", fontsize=12)
             plt.xticks(rotation=45)
             self.mostrar_grafico(fig)
         except Exception as e:
@@ -99,9 +142,9 @@ class Dashboard:
             incentivos = self.data.groupby(['TipoBeneficio', 'TipoAsignacionBeneficio'])['CantidadDeBeneficiarios'].sum().reset_index()
             fig, ax = plt.subplots(figsize=(10, 6))
             sns.barplot(data=incentivos, x='TipoBeneficio', y='CantidadDeBeneficiarios', hue='TipoAsignacionBeneficio', ax=ax, palette='Set2')
-            ax.set_title("Tipos de incentivos recibidos")
-            ax.set_xlabel("Tipo de Beneficio")
-            ax.set_ylabel("Cantidad de Beneficiarios")
+            ax.set_title("Tipos de incentivos recibidos", fontsize=14)
+            ax.set_xlabel("Tipo de Beneficio", fontsize=12)
+            ax.set_ylabel("Cantidad de Beneficiarios", fontsize=12)
             plt.xticks(rotation=45)
             self.mostrar_grafico(fig)
         except Exception as e:
@@ -112,9 +155,9 @@ class Dashboard:
             variacion = self.data.resample('Q', on='FechaInscripcionBeneficiario')['CantidadDeBeneficiarios'].sum().reset_index()
             fig, ax = plt.subplots(figsize=(10, 6))
             sns.lineplot(data=variacion, x='FechaInscripcionBeneficiario', y='CantidadDeBeneficiarios', ax=ax, marker='o', color='coral')
-            ax.set_title("Variación de beneficiarios en el tiempo")
-            ax.set_xlabel("Fecha")
-            ax.set_ylabel("Cantidad de Beneficiarios")
+            ax.set_title("Variación de beneficiarios en el tiempo", fontsize=14)
+            ax.set_xlabel("Fecha", fontsize=12)
+            ax.set_ylabel("Cantidad de Beneficiarios", fontsize=12)
             self.mostrar_grafico(fig)
         except Exception as e:
             self.mostrar_mensaje(f"Error al generar gráfico de variación en el tiempo: {e}")
@@ -124,9 +167,9 @@ class Dashboard:
             relacion = self.data.groupby(['TipoBeneficio', 'NivelEscolaridad'])['CantidadDeBeneficiarios'].sum().reset_index()
             fig, ax = plt.subplots(figsize=(10, 6))
             sns.barplot(data=relacion, x='TipoBeneficio', y='CantidadDeBeneficiarios', hue='NivelEscolaridad', ax=ax, palette='Pastel1')
-            ax.set_title("Relación entre tipo de incentivo y nivel educativo")
-            ax.set_xlabel("Tipo de Beneficio")
-            ax.set_ylabel("Cantidad de Beneficiarios")
+            ax.set_title("Relación entre tipo de incentivo y nivel educativo", fontsize=14)
+            ax.set_xlabel("Tipo de Beneficio", fontsize=12)
+            ax.set_ylabel("Cantidad de Beneficiarios", fontsize=12)
             plt.xticks(rotation=45)
             self.mostrar_grafico(fig)
         except Exception as e:
