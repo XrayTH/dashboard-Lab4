@@ -4,6 +4,7 @@ from datetime import datetime
 import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+import seaborn as sns
 from controlador import obtener_todos_beneficiarios
 
 class Dashboard:
@@ -72,8 +73,8 @@ class Dashboard:
 
     def total_beneficiarios(self):
         try:
-            periodo_inicio = datetime(2020, 1, 1)
-            periodo_fin = datetime(2023, 12, 31)
+            periodo_inicio = datetime(2012, 1, 1)
+            periodo_fin = datetime(2015, 12, 31)
             total = self.data[(self.data['FechaInscripcionBeneficiario'] >= periodo_inicio) & 
                               (self.data['FechaInscripcionBeneficiario'] <= periodo_fin)]['CantidadDeBeneficiarios'].sum()
             self.mostrar_mensaje(f"Total de beneficiarios entre {periodo_inicio.date()} y {periodo_fin.date()}: {total}")
@@ -82,33 +83,35 @@ class Dashboard:
 
     def distribucion_por_departamento(self):
         try:
-            distribucion = self.data.groupby('NombreDepartamentoAtencion')['CantidadDeBeneficiarios'].sum()
+            distribucion = self.data.groupby('NombreDepartamentoAtencion')['CantidadDeBeneficiarios'].sum().reset_index()
             fig, ax = plt.subplots(figsize=(10, 6))
-            distribucion.plot(kind='bar', ax=ax, color='skyblue')
+            sns.barplot(data=distribucion, x='NombreDepartamentoAtencion', y='CantidadDeBeneficiarios', ax=ax, palette='Blues_d')
             ax.set_title("Distribución de beneficiarios por departamento")
             ax.set_xlabel("Departamento")
             ax.set_ylabel("Cantidad de Beneficiarios")
+            plt.xticks(rotation=45)
             self.mostrar_grafico(fig)
         except Exception as e:
             self.mostrar_mensaje(f"Error al generar gráfico de distribución por departamento: {e}")
 
     def tipos_incentivos_recibidos(self):
         try:
-            incentivos = self.data.groupby(['TipoBeneficio', 'TipoAsignacionBeneficio'])['CantidadDeBeneficiarios'].sum().unstack()
+            incentivos = self.data.groupby(['TipoBeneficio', 'TipoAsignacionBeneficio'])['CantidadDeBeneficiarios'].sum().reset_index()
             fig, ax = plt.subplots(figsize=(10, 6))
-            incentivos.plot(kind='bar', stacked=True, ax=ax)
+            sns.barplot(data=incentivos, x='TipoBeneficio', y='CantidadDeBeneficiarios', hue='TipoAsignacionBeneficio', ax=ax, palette='Set2')
             ax.set_title("Tipos de incentivos recibidos")
             ax.set_xlabel("Tipo de Beneficio")
             ax.set_ylabel("Cantidad de Beneficiarios")
+            plt.xticks(rotation=45)
             self.mostrar_grafico(fig)
         except Exception as e:
             self.mostrar_mensaje(f"Error al generar gráfico de tipos de incentivos: {e}")
 
     def variacion_beneficiarios_tiempo(self):
         try:
-            variacion = self.data.resample('Q', on='FechaInscripcionBeneficiario')['CantidadDeBeneficiarios'].sum()
+            variacion = self.data.resample('Q', on='FechaInscripcionBeneficiario')['CantidadDeBeneficiarios'].sum().reset_index()
             fig, ax = plt.subplots(figsize=(10, 6))
-            variacion.plot(kind='line', ax=ax, marker='o', color='coral')
+            sns.lineplot(data=variacion, x='FechaInscripcionBeneficiario', y='CantidadDeBeneficiarios', ax=ax, marker='o', color='coral')
             ax.set_title("Variación de beneficiarios en el tiempo")
             ax.set_xlabel("Fecha")
             ax.set_ylabel("Cantidad de Beneficiarios")
@@ -118,12 +121,13 @@ class Dashboard:
 
     def relacion_incentivo_educacion(self):
         try:
-            relacion = self.data.groupby(['TipoBeneficio', 'NivelEscolaridad'])['CantidadDeBeneficiarios'].sum().unstack()
+            relacion = self.data.groupby(['TipoBeneficio', 'NivelEscolaridad'])['CantidadDeBeneficiarios'].sum().reset_index()
             fig, ax = plt.subplots(figsize=(10, 6))
-            relacion.plot(kind='bar', stacked=True, ax=ax)
+            sns.barplot(data=relacion, x='TipoBeneficio', y='CantidadDeBeneficiarios', hue='NivelEscolaridad', ax=ax, palette='Pastel1')
             ax.set_title("Relación entre tipo de incentivo y nivel educativo")
             ax.set_xlabel("Tipo de Beneficio")
             ax.set_ylabel("Cantidad de Beneficiarios")
+            plt.xticks(rotation=45)
             self.mostrar_grafico(fig)
         except Exception as e:
             self.mostrar_mensaje(f"Error al generar gráfico de relación incentivo y educación: {e}")
