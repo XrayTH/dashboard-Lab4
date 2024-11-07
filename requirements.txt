@@ -4,3 +4,4 @@ matplotlib
 seaborn
 pymysql
 python-dotenv
+scikit-learn
