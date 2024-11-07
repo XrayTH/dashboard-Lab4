@@ -5,6 +5,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import seaborn as sns
+from sklearn.cluster import KMeans  # Importamos KMeans
 from controlador import obtener_todos_beneficiarios
 
 class Dashboard:
@@ -24,7 +25,8 @@ class Dashboard:
             "Distribución por departamento": self.distribucion_por_departamento,
             "Tipos de incentivos recibidos": self.tipos_incentivos_recibidos,
             "Variación de beneficiarios en el tiempo": self.variacion_beneficiarios_tiempo,
-            "Relación entre tipo de incentivo y nivel educativo": self.relacion_incentivo_educacion
+            "Relación entre tipo de incentivo y nivel educativo": self.relacion_incentivo_educacion,
+            "Clustering de Beneficiarios": self.clustering_beneficiarios  # Nuevo botón
         }
 
         # Crear botones utilizando el diccionario
@@ -123,6 +125,33 @@ class Dashboard:
             self.mostrar_grafico(fig)
         except Exception as e:
             self.mostrar_mensaje(f"Error en consulta de beneficiarios: {e}")
+
+    def clustering_beneficiarios(self):
+        try:
+            # Seleccionamos las columnas para el análisis
+            df_clustering = self.data[['NivelEscolaridad', 'TipoAsignacionBeneficio', 'CantidadDeBeneficiarios']]
+
+            # Convertir las variables categóricas a variables numéricas
+            df_clustering['NivelEscolaridad'] = pd.Categorical(df_clustering['NivelEscolaridad']).codes
+            df_clustering['TipoAsignacionBeneficio'] = pd.Categorical(df_clustering['TipoAsignacionBeneficio']).codes
+
+            # Usar KMeans para hacer el clustering
+            kmeans = KMeans(n_clusters=3, random_state=42)
+            df_clustering['Cluster'] = kmeans.fit_predict(df_clustering[['NivelEscolaridad', 'TipoAsignacionBeneficio', 'CantidadDeBeneficiarios']])
+
+            # Crear el gráfico de clusters
+            fig, ax = plt.subplots(figsize=(12, 6))
+            sns.scatterplot(data=df_clustering, x='NivelEscolaridad', y='CantidadDeBeneficiarios', hue='Cluster', palette='deep', ax=ax)
+
+            ax.set_title("Clustering de Beneficiarios", fontsize=14)
+            ax.set_xlabel("Nivel de Escolaridad", fontsize=12)
+            ax.set_ylabel("Cantidad de Beneficiarios", fontsize=12)
+
+            # Mostrar el gráfico
+            self.mostrar_grafico(fig)
+
+        except Exception as e:
+            self.mostrar_mensaje(f"Error al realizar clustering: {e}")
 
     def distribucion_por_departamento(self):
         try:
